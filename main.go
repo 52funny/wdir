@@ -2,14 +2,17 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"html/template"
-	"log"
 	"path/filepath"
 
 	"github.com/52funny/wdir/controller"
+	"github.com/52funny/wdir/utils"
 	"github.com/valyala/fasthttp"
 )
+
+func init() {
+	utils.InitLogger("log")
+}
 
 func main() {
 	port := flag.String("port", "8080", "the server port")
@@ -24,12 +27,13 @@ func main() {
 		filepath.Join(*tPath, "main.js.html"),
 	)
 	if err != nil {
-		log.Println(err)
+		utils.Log.Println(err)
 	}
 
 	handler := controller.HandleFastHTTP(*path, t, *tPath)
-	fmt.Printf("Listen on http://localhost:%v\n", *port)
+	utils.Log.Printf("Listen on http://localhost:%v\n", *port)
 	if err := fasthttp.ListenAndServe(":"+*port, handler); err != nil {
+		utils.Log.Println(err)
 		panic(err)
 	}
 }

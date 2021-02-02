@@ -1,11 +1,9 @@
 package controller
 
 import (
-	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -24,15 +22,14 @@ func HandleFastHTTP(path string, t *template.Template, tPath string) fasthttp.Re
 		method := string(ctx.Method())
 
 		urlPath := string(ctx.Path())
-		fmt.Println(method, urlPath)
+		utils.Log.Println(method, urlPath)
 		if urlPath == "/icon.woff" {
 			icon, err := os.Open(filepath.Join(tPath, "icon.woff"))
 			if err != nil {
-				log.Println(err)
+				utils.Log.Println(err)
 			}
 			io.Copy(ctx, icon)
 			err = icon.Close()
-			log.Println(err)
 			return
 		}
 
