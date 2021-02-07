@@ -15,6 +15,8 @@ var (
 	Path string
 	// LogPath is log path
 	LogPath string
+	// ShowHiddenFiles is show Hidden Files
+	ShowHiddenFiles bool
 )
 
 // ReadConfig is read config function
@@ -33,5 +35,6 @@ func ReadConfig(configName string) error {
 	Template = viper.GetString("config.template")
 	Path = viper.GetString("config.path")
 	LogPath = viper.GetString("config.log_path")
+	ShowHiddenFiles = viper.GetBool("config.show_hidden_files")
 	return nil
 }

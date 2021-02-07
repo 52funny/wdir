@@ -7,7 +7,9 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/52funny/wdir/config"
 	"github.com/52funny/wdir/model"
 	"github.com/52funny/wdir/utils"
 	"github.com/h2non/filetype"
@@ -23,6 +25,19 @@ func HandleFastHTTP(path string, t *template.Template, tPath string) fasthttp.Re
 
 		urlPath := string(ctx.Path())
 		utils.Log.Println(method, urlPath)
+
+		// if not show hidden files
+		if !config.ShowHiddenFiles {
+			items := strings.Split(urlPath, "/")
+			if len(items) > 0 {
+				for _, it := range items {
+					if len(it) > 0 && it[0:1] == "." {
+						ctx.Error("no files", http.StatusNotFound)
+						return
+					}
+				}
+			}
+		}
 		if urlPath == "/icon.woff" {
 			icon, err := os.Open(filepath.Join(tPath, "icon.woff"))
 			if err != nil {
@@ -56,6 +71,9 @@ func HandleFastHTTP(path string, t *template.Template, tPath string) fasthttp.Re
 			fileArray := make([]model.File, 0, len(files)/2)
 
 			for _, item := range files {
+				if !config.ShowHiddenFiles && item.Name()[0:1] == "." {
+					continue
+				}
 				types := ""
 
 				if item.IsDir() {
