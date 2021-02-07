@@ -75,8 +75,8 @@ func HandleFastHTTP(path string, t *template.Template, tPath string) fasthttp.Re
 					continue
 				}
 				types := ""
-
-				if item.IsDir() {
+				fileInfo, _ := os.Stat(filepath.Join(path, urlPath, item.Name()))
+				if fileInfo.IsDir() {
 					types = "folder"
 					directoryArray = append(directoryArray, model.File{
 						Path: filepath.Join(urlPath, item.Name()),
