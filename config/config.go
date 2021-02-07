@@ -32,6 +32,6 @@ func ReadConfig(configName string) error {
 	Port = viper.GetString("config.port")
 	Template = viper.GetString("config.template")
 	Path = viper.GetString("config.path")
-	LogPath = viper.GetString("config.logpath")
+	LogPath = viper.GetString("config.log_path")
 	return nil
 }

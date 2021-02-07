@@ -2,4 +2,4 @@ config:
   port: 8080
   template: compress
   path: /Users/52funny
-  logpath: log
+  log_path: log
