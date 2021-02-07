@@ -36,15 +36,17 @@ config:
   port: 8080
   template: compress
   path: /Users/52funny
-  logpath: log
+  log_path: log
+  show_hidden_files: false
 ```
 
-| Configuration item | Configuration instructions |
-| ------------------ | -------------------------- |
-| config.port        | Server port                |
-| config.template    | Template catalog           |
-| config.path        | Index catalog              |
-| config.logpath     | Log catalog                |
+| Configuration item       | Configuration instructions |
+| ------------------------ | -------------------------- |
+| config.port              | Server port                |
+| config.template          | Template catalog           |
+| config.path              | Index catalog              |
+| config.log_path          | Log catalog                |
+| config.show_hidden_files | Show Hidden Files          |
 
 ## Third Party Library
 

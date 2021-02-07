@@ -36,15 +36,17 @@ config:
   port: 8080
   template: compress
   path: /Users/52funny
-  logpath: log
+  log_path: log
+  show_hidden_files: false
 ```
 
-| 配置项          | 配置说明 |
-| --------------- | -------- |
-| config.port     | 端口     |
-| config.template | 模版目录 |
-| config.path     | 索引目录 |
-| config.logpath  | 日志目录 |
+| 配置项                   | 配置说明     |
+| ------------------------ | ------------ |
+| config.port              | 端口         |
+| config.template          | 模版目录     |
+| config.path              | 索引目录     |
+| config.log_path          | 日志目录     |
+| config.show_hidden_files | 显示隐藏目录 |
 
 ## 第三方库
 
