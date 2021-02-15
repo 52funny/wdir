@@ -25,6 +25,14 @@ go build
 There is a default configuration file `config.yaml` in the wdir folder. you can specify the configuration file with the `-c` command.
 `./webd -c config`
 
+### Docker
+
+```sh
+docker run -d --name wdir -p 9194:8080 -v /Users/52funny:/mnt  52funny/wdir
+```
+
+8080 is the port inside the container, 9194 is the port you want to map locally. /mnt is the directory to be indexed inside the container, /Users/52funny is the directory mapped locally to the container.
+
 ## Configuration
 
 There is `config.yaml` in the wdir directory, encoded as `UTF-8`

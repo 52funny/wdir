@@ -25,6 +25,14 @@ go build
 在 wdir 文件夹中有默认的配置文件`config.yaml`。你可以用`-c`命令来指定配置文件。
 `./wdir -c config`
 
+### Docker
+
+```sh
+docker run -d --name wdir -p 9194:8080 -v /Users/52funny:/mnt  52funny/wdir
+```
+
+8080 是容器内部的端口，9194 是你要映射本地的端口。/mnt 是容器内要索引的目录, /Users/52funny 是本地映射到容器内的目录。
+
 ## 配置
 
 在 wdir 目录下有`config.yaml`, 编码为`UTF-8`
