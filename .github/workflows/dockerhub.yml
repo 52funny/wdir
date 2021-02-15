@@ -16,7 +16,7 @@ jobs:
         uses: actions/setup-go@v2
 
       - name: Build Application
-        run: go build -ldflags "-w -s" -o wdir
+        run:  CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build  -ldflags="-w -s" -o wdir
 
       - name: Docker meta
         id: docker_meta
