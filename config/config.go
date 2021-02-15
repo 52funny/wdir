@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"strconv"
 
 	"github.com/spf13/viper"
 )
@@ -21,6 +22,16 @@ var (
 
 // ReadConfig is read config function
 func ReadConfig(configName string) error {
+	envWdirDocker := os.Getenv("WDIR_DOCKER")
+	isDocker, _ := strconv.ParseBool(envWdirDocker)
+	if isDocker {
+		Port = os.Getenv("PORT")
+		Template = os.Getenv("TEMPLATE")
+		Path = os.Getenv("FILEPATH")
+		LogPath = os.Getenv("LOGPATH")
+		ShowHiddenFiles, _ = strconv.ParseBool(os.Getenv("SHOWHIDDENFILES"))
+		return nil
+	}
 	viper.SetConfigName(configName)
 	dir, err := os.Getwd()
 	if err != nil {
