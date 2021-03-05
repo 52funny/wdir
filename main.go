@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"flag"
 	"fmt"
 	"html/template"
@@ -12,6 +13,9 @@ import (
 	"github.com/52funny/wdir/utils"
 	"github.com/valyala/fasthttp"
 )
+
+//go:embed compress/icon.woff
+var embedF embed.FS
 
 func init() {
 	configName := flag.String("c", "config", "the config name")
@@ -36,7 +40,7 @@ func main() {
 		utils.Log.Println(err)
 	}
 
-	handler := controller.HandleFastHTTP(config.Path, t, config.Template)
+	handler := controller.HandleFastHTTP(config.Path, t, config.Template, &embedF)
 	address := getNetAddress()
 	fmt.Println("You can now view list in the browser.")
 	fmt.Printf("  Local:%10c  http://localhost:%v\n", ' ', config.Port)
@@ -53,6 +57,7 @@ func getNetAddress() []string {
 	netS := make([]string, 0)
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
+		panic(err)
 	}
 	for _, addr := range addrs {
 		if ipNet, ok := addr.(*net.IPNet); ok && !ipNet.IP.IsLoopback() {

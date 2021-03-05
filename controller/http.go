@@ -1,8 +1,8 @@
 package controller
 
 import (
+	"embed"
 	"html/template"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -17,7 +17,11 @@ import (
 )
 
 // HandleFastHTTP is handle path matching
-func HandleFastHTTP(path string, t *template.Template, tPath string) fasthttp.RequestHandler {
+func HandleFastHTTP(path string, t *template.Template, tPath string, embedF *embed.FS) fasthttp.RequestHandler {
+	iconWoff, err := embedF.ReadFile("compress/icon.woff")
+	if err != nil {
+		panic(err)
+	}
 	// for file
 	fileHandler := fasthttp.FSHandler(path, 0)
 	return func(ctx *fasthttp.RequestCtx) {
@@ -39,12 +43,12 @@ func HandleFastHTTP(path string, t *template.Template, tPath string) fasthttp.Re
 			}
 		}
 		if urlPath == "/icon.woff" {
-			icon, err := os.Open(filepath.Join(tPath, "icon.woff"))
-			if err != nil {
-				utils.Log.Println(err)
-			}
-			io.Copy(ctx, icon)
-			err = icon.Close()
+			// icon, err := os.Open(filepath.Join(tPath, "icon.woff"))
+			// if err != nil {
+			// 	utils.Log.Println(err)
+			// }
+			ctx.Write(iconWoff)
+			// defer icon.Close()
 			return
 		}
 
@@ -60,7 +64,6 @@ func HandleFastHTTP(path string, t *template.Template, tPath string) fasthttp.Re
 
 		// is Dir
 		if state.IsDir() {
-
 			files, err := ioutil.ReadDir(filepath.Join(path, urlPath))
 			if err != nil {
 				ctx.Error(err.Error(), http.StatusInternalServerError)

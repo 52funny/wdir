@@ -9,6 +9,7 @@ import (
 )
 
 var (
+	// Log is logging
 	Log *log.Logger
 )
 
@@ -26,5 +27,5 @@ func InitLogger(path string) {
 		f,
 		os.Stdout,
 	}
-	Log = log.New(io.MultiWriter(writers...), "[wdir] ", log.Ldate|log.Ltime|log.Lshortfile)
+	Log = log.New(io.MultiWriter(writers...), "[wdir] ", log.Ldate|log.Ltime)
 }
