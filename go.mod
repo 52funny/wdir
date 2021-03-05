@@ -1,6 +1,6 @@
 module github.com/52funny/wdir
 
-go 1.15
+go 1.17
 
 require (
 	github.com/h2non/filetype v1.1.1
