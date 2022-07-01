@@ -11,9 +11,9 @@ ENV SHOWHIDDENFILES=false
 ENV FILEPATH=/mnt \
     PORT=8080 \ 
     LOGPATH=/log \
-    TEMPLATE=compress
+    TEMPLATE=static
 
-COPY compress ./compress
+COPY static ./static
 COPY wdir .
 
 EXPOSE 8080

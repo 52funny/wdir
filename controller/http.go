@@ -17,8 +17,8 @@ import (
 )
 
 // HandleFastHTTP is handle path matching
-func HandleFastHTTP(path string, t *template.Template, tPath string, embedF *embed.FS) fasthttp.RequestHandler {
-	iconWoff, err := embedF.ReadFile("compress/icon.woff")
+func HandleFastHTTP(path string, t *template.Template, embedF *embed.FS) fasthttp.RequestHandler {
+	iconWoff, err := embedF.ReadFile("static/icon.woff")
 	if err != nil {
 		panic(err)
 	}
@@ -31,7 +31,7 @@ func HandleFastHTTP(path string, t *template.Template, tPath string, embedF *emb
 		utils.Log.Println(method, urlPath)
 
 		// if not show hidden files
-		if !config.ShowHiddenFiles {
+		if !config.Config.ShowHiddenFiles {
 			items := strings.Split(urlPath, "/")
 			if len(items) > 0 {
 				for _, it := range items {
@@ -43,12 +43,7 @@ func HandleFastHTTP(path string, t *template.Template, tPath string, embedF *emb
 			}
 		}
 		if urlPath == "/icon.woff" {
-			// icon, err := os.Open(filepath.Join(tPath, "icon.woff"))
-			// if err != nil {
-			// 	utils.Log.Println(err)
-			// }
 			ctx.Write(iconWoff)
-			// defer icon.Close()
 			return
 		}
 
@@ -74,7 +69,7 @@ func HandleFastHTTP(path string, t *template.Template, tPath string, embedF *emb
 			fileArray := make([]model.File, 0, len(files)/2)
 
 			for _, item := range files {
-				if !config.ShowHiddenFiles && item.Name()[0:1] == "." {
+				if !config.Config.ShowHiddenFiles && item.Name()[0:1] == "." {
 					continue
 				}
 				types := ""

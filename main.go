@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"html/template"
 	"net"
-	"path/filepath"
 
 	"github.com/52funny/wdir/config"
 	"github.com/52funny/wdir/controller"
@@ -14,40 +13,39 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-//go:embed compress/icon.woff
+//go:embed static/*
 var embedF embed.FS
 
 func init() {
-	configName := flag.String("c", "config", "the config name")
+	configName := flag.String("c", "config.yaml", "the config name")
 	flag.Parse()
 	err := config.ReadConfig(*configName)
 	if err != nil {
 		panic(err)
 	}
-	utils.InitLogger(config.LogPath)
+	utils.InitLogger(config.Config.LogPath)
 }
-
 func main() {
-
-	t, err := template.ParseFiles(
-		filepath.Join(config.Template, "index.html"),
-		filepath.Join(config.Template, "bulma.min.css.html"),
-		filepath.Join(config.Template, "main.css.html"),
-		filepath.Join(config.Template, "header.html"),
-		filepath.Join(config.Template, "main.js.html"),
+	t, err := template.ParseFS(embedF,
+		"static/index.html",
+		"static/bulma.min.css.html",
+		"static/main.css.html",
+		"static/header.html",
+		"static/main.js.html",
 	)
 	if err != nil {
-		utils.Log.Println(err)
+		utils.Log.Fatal(err)
 	}
 
-	handler := controller.HandleFastHTTP(config.Path, t, config.Template, &embedF)
+	handler := controller.HandleFastHTTP(config.Config.Path, t, &embedF)
 	address := getNetAddress()
 	fmt.Println("You can now view list in the browser.")
-	fmt.Printf("  Local:%10c  http://localhost:%v\n", ' ', config.Port)
+	fmt.Printf("  Local:%10c  http://localhost:%v\n", ' ', config.Config.Port)
 	for _, addr := range address {
-		fmt.Printf("  On Your NetWork:  http://%v:%v\n", addr, config.Port)
+		fmt.Printf("  On Your NetWork:  http://%v:%v\n", addr, config.Config.Port)
 	}
-	if err := fasthttp.ListenAndServe("0.0.0.0:"+config.Port, handler); err != nil {
+
+	if err := fasthttp.ListenAndServe("0.0.0.0:"+config.Config.Port, handler); err != nil {
 		utils.Log.Println(err)
 		panic(err)
 	}

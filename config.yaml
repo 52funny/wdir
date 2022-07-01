@@ -1,6 +1,5 @@
-config:
-  port: 8080
-  template: compress
-  path: /Users/52funny
-  log_path: log
-  show_hidden_files: false
+port: 8080
+template: static
+path: /Users/52funny
+log_path: log
+show_hidden_files: false

@@ -68,10 +68,18 @@
         newLink.setAttribute('href', href);
 
         const img = document.createElement('img');
+        const columns = document.createElement('div');
+        columns.setAttribute('class', 'columns');
+        columns.setAttribute('style', 'justify-content: center;');
+        const column = document.createElement('div');
+        column.setAttribute('class', 'column is-11 center');
+        columns.appendChild(column);
+        column.appendChild(img);
+        img.setAttribute('style', 'width: 100%;');
         img.setAttribute('src', href);
         img.setAttribute('loading', 'lazy');
 
-        newLink.appendChild(img);
+        newLink.appendChild(columns);
         it.appendChild(newLink);
       });
     }

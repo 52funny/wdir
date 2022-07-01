@@ -4,48 +4,28 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/spf13/viper"
+	"github.com/jinzhu/configor"
 )
 
-var (
-	// Port is server port
-	Port string
-	//Template is template path
-	Template string
-	// Path is dir path
-	Path string
-	// LogPath is log path
-	LogPath string
-	// ShowHiddenFiles is show Hidden Files
-	ShowHiddenFiles bool
-)
+var Config = struct {
+	Port            string `default:"80" yaml:"port"`
+	Path            string `default:"." yaml:"path"`
+	LogPath         string `default:"log" yaml:"log_path"`
+	ShowHiddenFiles bool   `default:"false" yaml:"show_hidden_files"`
+}{}
 
 // ReadConfig is read config function
 func ReadConfig(configName string) error {
 	envWdirDocker := os.Getenv("WDIR_DOCKER")
 	isDocker, _ := strconv.ParseBool(envWdirDocker)
+	// if is docker
 	if isDocker {
-		Port = os.Getenv("PORT")
-		Template = os.Getenv("TEMPLATE")
-		Path = os.Getenv("FILEPATH")
-		LogPath = os.Getenv("LOGPATH")
-		ShowHiddenFiles, _ = strconv.ParseBool(os.Getenv("SHOWHIDDENFILES"))
+		Config.Port = os.Getenv("PORT")
+		Config.Path = os.Getenv("FILEPATH")
+		Config.LogPath = os.Getenv("LOGPATH")
+		Config.ShowHiddenFiles, _ = strconv.ParseBool(os.Getenv("SHOWHIDDENFILES"))
 		return nil
 	}
-	viper.SetConfigName(configName)
-	dir, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	viper.AddConfigPath(dir)
-	err = viper.ReadInConfig()
-	if err != nil {
-		return err
-	}
-	Port = viper.GetString("config.port")
-	Template = viper.GetString("config.template")
-	Path = viper.GetString("config.path")
-	LogPath = viper.GetString("config.log_path")
-	ShowHiddenFiles = viper.GetBool("config.show_hidden_files")
+	configor.Load(&Config, configName)
 	return nil
 }
