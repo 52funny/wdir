@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"strings"
 )
@@ -48,4 +49,21 @@ func PathHidden(path string) bool {
 		}
 	}
 	return false
+}
+
+// Get all network interface
+func GetNetAddress() []string {
+	netS := make([]string, 0)
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		panic(err)
+	}
+	for _, addr := range addrs {
+		if ipNet, ok := addr.(*net.IPNet); ok && !ipNet.IP.IsLoopback() {
+			if ipNet.IP.To4() != nil {
+				netS = append(netS, ipNet.IP.String())
+			}
+		}
+	}
+	return netS
 }

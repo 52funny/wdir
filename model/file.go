@@ -11,5 +11,5 @@ type FileInfo struct {
 // File is description filepath and fileinfo
 type File struct {
 	Path     string   `json:"path"`
-	Fileinfo FileInfo `json:"fileinfo"`
+	FileInfo FileInfo `json:"fileinfo"`
 }
