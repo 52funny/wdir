@@ -84,8 +84,25 @@ console.log('spread', isSpread);
 })();
 
 const spreadBtn = document.getElementById('spread-button');
+
+const changeBtnBackground = (btn, spred) => {
+  if (spred == null) {
+    return;
+  }
+  if (spred == 'true') {
+    spreadBtn.classList.remove('is-light');
+    spreadBtn.classList.add('is-dark');
+  } else {
+    spreadBtn.classList.remove('is-dark');
+    spreadBtn.classList.add('is-light');
+  }
+};
+changeBtnBackground(spreadBtn, isSpread);
+
 spreadBtn.addEventListener('click', function (e) {
-  localStorage.setItem('spread', isSpread == 'true' ? 'false' : 'true');
+  isSpread = isSpread == 'true' ? 'false' : 'true';
+  changeBtnBackground(spreadBtn, isSpread);
+  localStorage.setItem('spread', isSpread);
 });
 
 // for download div
