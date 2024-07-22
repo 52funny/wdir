@@ -38,7 +38,7 @@ func main() {
 	}
 
 	fsH := fasthttp.FSHandler(config.Config.Path, 0)
-	handler := controller.HandleFastHTTP(fsH, t, &embedF, config.Config.Path, commit)
+	handler := fasthttp.CompressHandler(controller.HandleFastHTTP(fsH, t, &embedF, config.Config.Path, commit))
 	address := utils.GetNetAddress()
 
 	fmt.Println("Version:", version, "Commit:", commit)
