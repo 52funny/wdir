@@ -12,3 +12,6 @@ run: build
 
 build:
 	@go build -ldflags "-X main.commit=$(build_rev) -X main.date=$(build_date)" -o wdir
+
+install:
+	@go install -ldflags "-X main.commit=$(build_rev) -X main.date=$(build_date)" .

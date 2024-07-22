@@ -13,7 +13,7 @@ ENV FILEPATH=/mnt \
     LOGPATH=/log \
     TEMPLATE=static
 
-COPY static ./static
+COPY assets ./assets
 COPY wdir .
 
 EXPOSE 8080
