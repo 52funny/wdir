@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 // ConvertSize is Converting bytes into individual units
@@ -31,6 +32,20 @@ func PathExists(path string) bool {
 	}
 	if os.IsNotExist(err) {
 		return false
+	}
+	return false
+}
+
+// Check for hidden directories in the path
+func PathHidden(path string) bool {
+	fileList := strings.Split(path, "/")
+	for _, d := range fileList {
+		if len(d) == 0 {
+			continue
+		}
+		if FileHidden(d) {
+			return true
+		}
 	}
 	return false
 }
