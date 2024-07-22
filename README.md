@@ -42,7 +42,6 @@ Configuration template
 ```yaml
 config:
   port: 8080
-  template: compress
   path: /Users/52funny
   log_path: log
   show_hidden_files: false
@@ -51,7 +50,6 @@ config:
 | Configuration item       | Configuration instructions |
 | ------------------------ | -------------------------- |
 | config.port              | Server port                |
-| config.template          | Template catalog           |
 | config.path              | Index catalog              |
 | config.log_path          | Log catalog                |
 | config.show_hidden_files | Show Hidden Files          |
