@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"html/template"
+	"path/filepath"
 
 	"github.com/52funny/wdir/config"
 	"github.com/52funny/wdir/controller"
@@ -23,8 +24,14 @@ var (
 
 func init() {
 	configName := flag.String("c", "config.yaml", "the config name")
+	port := flag.String("p", "80", "server port")
 	flag.Parse()
-	err := config.ReadConfig(*configName)
+
+	path := "."
+	if len(flag.Args()) > 0 {
+		path = flag.Arg(0)
+	}
+	err := config.ReadConfig(*configName, *port, path)
 	if err != nil {
 		panic(err)
 	}
@@ -37,8 +44,12 @@ func main() {
 		utils.Log.Fatal(err)
 	}
 
+	rootPath, err := filepath.Abs(config.Config.Path)
+	if err != nil {
+		panic(err)
+	}
 	fsH := fasthttp.FSHandler(config.Config.Path, 0)
-	handler := fasthttp.CompressHandler(controller.HandleFastHTTP(fsH, t, &embedF, config.Config.Path, commit))
+	handler := fasthttp.CompressHandler(controller.HandleFastHTTP(fsH, t, &embedF, rootPath, commit))
 	address := utils.GetNetAddress()
 
 	fmt.Println("Version:", version, "Commit:", commit)

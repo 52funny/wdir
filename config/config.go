@@ -1,8 +1,8 @@
 package config
 
 import (
-	"os"
 	"strconv"
+	"syscall"
 
 	"github.com/jinzhu/configor"
 )
@@ -15,17 +15,29 @@ var Config = struct {
 }{}
 
 // ReadConfig is read config function
-func ReadConfig(configName string) error {
-	envWdirDocker := os.Getenv("WDIR_DOCKER")
-	isDocker, _ := strconv.ParseBool(envWdirDocker)
-	// if is docker
-	if isDocker {
-		Config.Port = os.Getenv("PORT")
-		Config.Path = os.Getenv("FILEPATH")
-		Config.LogPath = os.Getenv("LOGPATH")
-		Config.ShowHiddenFiles, _ = strconv.ParseBool(os.Getenv("SHOWHIDDENFILES"))
-		return nil
-	}
+func ReadConfig(configName, flagPort, flagPath string) error {
+	// first read from file
 	configor.Load(&Config, configName)
+
+	Config.Port = flagPort
+	Config.Path = flagPath
+
+	port, ok := syscall.Getenv("PORT")
+	if ok {
+		Config.Port = port
+	}
+	path, ok := syscall.Getenv("FILEPATH")
+	if ok {
+		Config.Path = path
+	}
+	logPath, ok := syscall.Getenv("LOGPATH")
+	if ok {
+		Config.LogPath = logPath
+	}
+
+	show, ok := syscall.Getenv("SHOWHIDDENFILES")
+	if ok {
+		Config.ShowHiddenFiles, _ = strconv.ParseBool(show)
+	}
 	return nil
 }
