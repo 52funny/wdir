@@ -2,10 +2,13 @@ package controller
 
 import (
 	"embed"
+	"fmt"
 	"html/template"
+	"mime"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/52funny/wdir/config"
@@ -16,20 +19,30 @@ import (
 )
 
 // HandleFastHTTP is handle path matching
-func HandleFastHTTP(fsH fasthttp.RequestHandler, t *template.Template, embedF *embed.FS, rootPath string) fasthttp.RequestHandler {
-	iconWoff, err := embedF.ReadFile("static/icon.woff")
-	if err != nil {
-		panic(err)
-	}
+func HandleFastHTTP(fsH fasthttp.RequestHandler, t *template.Template, embedF *embed.FS, rootPath string, commit string) fasthttp.RequestHandler {
+	assetsPath := fmt.Sprintf("/%s", commit)
+
 	return func(ctx *fasthttp.RequestCtx) {
 		method := string(ctx.Method())
 		urlPath := string(ctx.Path())
-		utils.Log.Println(method, urlPath)
 
-		if urlPath == "/icon.woff" {
-			ctx.Write(iconWoff)
+		// retrieve some files in the asset directory
+		if strings.HasPrefix(urlPath, assetsPath) {
+			relPath, _ := filepath.Rel(assetsPath, urlPath)
+			actualPath := fmt.Sprintf("assets/%s", relPath)
+			bs, err := embedF.ReadFile(actualPath)
+			if err != nil {
+				ctx.Error(fmt.Sprintf("Error get %s", urlPath), http.StatusNotFound)
+				return
+			}
+			mime := mime.TypeByExtension(actualPath[strings.LastIndex(actualPath, "."):])
+			ctx.Response.Header.Set("Content-Type", mime)
+			ctx.Write(bs)
 			return
 		}
+
+		// log url path
+		utils.Log.Println(method, urlPath)
 
 		// check whether it is a hidden directory
 		dstPath := filepath.Join(rootPath, urlPath)
@@ -50,14 +63,14 @@ func HandleFastHTTP(fsH fasthttp.RequestHandler, t *template.Template, embedF *e
 
 		switch stat.IsDir() {
 		case true:
-			RenderDir(ctx, t, dstPath, urlPath)
+			RenderDir(ctx, t, dstPath, urlPath, commit)
 		case false:
 			fsH(ctx)
 		}
 	}
 }
 
-func RenderDir(ctx *fasthttp.RequestCtx, t *template.Template, dirPath, urlPath string) {
+func RenderDir(ctx *fasthttp.RequestCtx, t *template.Template, dirPath, urlPath, commit string) {
 	files, err := os.ReadDir(dirPath)
 	if err != nil {
 		ctx.Error(err.Error(), http.StatusInternalServerError)
@@ -90,6 +103,9 @@ func RenderDir(ctx *fasthttp.RequestCtx, t *template.Template, dirPath, urlPath 
 			fileList = append(fileList, f)
 		}
 	}
-	t.Execute(ctx, append(directoryList, fileList...))
+	m := make(map[string]interface{})
+	m["Data"] = append(directoryList, fileList...)
+	m["Assets"] = commit
+	t.Execute(ctx, m)
 	ctx.Response.Header.Set("Content-Type", "text/html; charset=utf-8")
 }

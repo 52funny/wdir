@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wdir</title>
+  <link rel="stylesheet" href="/{{ .Assets }}/bulma.min.css">
+  <link rel="stylesheet" href="/{{ .Assets }}/main.css">
+</head>
+
+<body>
+  {{template "header"}}
+  <main class="container list">
+    <div class="card">
+      {{ range $i, $v := .Data }}
+      <div class="list-item" type="{{ $v.FileInfo.Type }}">
+        <div class="columns is-mobile">
+          <div class="column is-half-tablet is-four-fifths-mobile">
+            <div class="icon-text">
+              <span class="icon large" type="{{ $v.FileInfo.Type }}">
+                <i class="fas fa-file"></i>
+              </span>
+              <a href="{{ $v.Path }}">{{ $v.FileInfo.Name }}</a>
+            </div>
+          </div>
+          <div class="column is-3 is-hidden-mobile">{{ $v.FileInfo.Date }}</div>
+          <div class="column is-1 is-hidden-mobile">{{ $v.FileInfo.Size }}</div>
+          <div class="column">
+            {{if not ( eq $v.FileInfo.Type "folder" ) }}
+            <div class="download-div level is-mobile level-right" name="{{ $v.FileInfo.Name }}" url="{{ $v.Path }}">
+              下载
+            </div>
+            {{ end }}
+          </div>
+        </div>
+      </div>
+      {{ end }}
+    </div>
+  </main>
+</body>
+<script src="/{{ .Assets }}/fuse.min.js"></script>
+<script src="/{{ .Assets }}/main.js"></script>
+
+</html>

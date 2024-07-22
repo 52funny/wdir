@@ -12,7 +12,7 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-//go:embed static/*
+//go:embed assets/*
 var embedF embed.FS
 
 var (
@@ -32,19 +32,13 @@ func init() {
 }
 
 func main() {
-	t, err := template.ParseFS(embedF,
-		"static/index.html",
-		"static/bulma.min.css.html",
-		"static/main.css.html",
-		"static/header.html",
-		"static/main.js.html",
-	)
+	t, err := template.ParseFS(embedF, "assets/index.html", "assets/header.html")
 	if err != nil {
 		utils.Log.Fatal(err)
 	}
 
 	fsH := fasthttp.FSHandler(config.Config.Path, 0)
-	handler := controller.HandleFastHTTP(fsH, t, &embedF, config.Config.Path)
+	handler := controller.HandleFastHTTP(fsH, t, &embedF, config.Config.Path, commit)
 	address := utils.GetNetAddress()
 
 	fmt.Println("Version:", version, "Commit:", commit)
