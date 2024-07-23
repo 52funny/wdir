@@ -22,9 +22,14 @@ var (
 	date    = "unknown"
 )
 
+var certFile string
+var keyFile string
+
 func init() {
 	configName := flag.String("c", "config.yaml", "the config name")
 	port := flag.String("p", "80", "server port")
+	flag.StringVar(&certFile, "tls-cert", "", "Path to SSL/TLS certificate")
+	flag.StringVar(&keyFile, "tls-key", "", "Path to SSL/TLS certificate's private key")
 	flag.Parse()
 
 	path := "."
@@ -53,14 +58,27 @@ func main() {
 	address := utils.GetNetAddress()
 
 	fmt.Println("Version:", version, "Commit:", commit)
-	fmt.Println("You can now view list in the browser.")
-	fmt.Printf("  Local:%10c  http://localhost:%v\n", ' ', config.Config.Port)
-	for _, addr := range address {
-		fmt.Printf("  On Your NetWork:  http://%v:%v\n", addr, config.Config.Port)
+	addr := fmt.Sprintf("0.0.0.0:%s", config.Config.Port)
+	if len(certFile) > 0 && len(keyFile) > 0 {
+		displayAddress(address, true)
+		err = fasthttp.ListenAndServeTLS(addr, certFile, keyFile, handler)
+	} else {
+		displayAddress(address, false)
+		err = fasthttp.ListenAndServe(addr, handler)
 	}
+	if err != nil {
+		utils.Log.Fatal(err)
+	}
+}
 
-	if err := fasthttp.ListenAndServe("0.0.0.0:"+config.Config.Port, handler); err != nil {
-		utils.Log.Println(err)
-		panic(err)
+func displayAddress(address []string, https bool) {
+	scheme := "http"
+	if https {
+		scheme = "https"
+	}
+	fmt.Println("You can now view list in the browser.")
+	fmt.Printf("  Local:%10c  %s://localhost:%v\n", ' ', scheme, config.Config.Port)
+	for _, addr := range address {
+		fmt.Printf("  On Your NetWork:  %s://%v:%v\n", scheme, addr, config.Config.Port)
 	}
 }
