@@ -23,6 +23,7 @@ func HandleFastHTTP(fsH fasthttp.RequestHandler, t *template.Template, embedF *e
 	assetsPath := fmt.Sprintf("/%s", commit)
 
 	return func(ctx *fasthttp.RequestCtx) {
+		remote := ctx.RemoteIP().String()
 		method := string(ctx.Method())
 		urlPath := string(ctx.Path())
 
@@ -42,7 +43,7 @@ func HandleFastHTTP(fsH fasthttp.RequestHandler, t *template.Template, embedF *e
 		}
 
 		// log url path
-		utils.Log.Println(method, urlPath)
+		utils.Log.Println(remote, method, urlPath)
 
 		// check whether it is a hidden directory
 		dstPath := filepath.Join(rootPath, urlPath)
