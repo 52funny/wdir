@@ -11,7 +11,7 @@ run: build
 	@./wdir
 
 build:
-	@go build -ldflags "-X main.commit=$(build_rev) -X main.date=$(build_date)" -o wdir
+	@go build -ldflags "-s -w -X main.commit=$(build_rev) -X main.date=$(build_date)" -o wdir
 
 install:
-	@go install -ldflags "-X main.commit=$(build_rev) -X main.date=$(build_date)" .
+	@go install -ldflags "-s -w -X main.commit=$(build_rev) -X main.date=$(build_date)" .
