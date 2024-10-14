@@ -5,12 +5,14 @@ import (
 	"flag"
 	"fmt"
 	"html/template"
+	"net"
 	"path/filepath"
 
 	"github.com/52funny/wdir/config"
 	"github.com/52funny/wdir/controller"
 	"github.com/52funny/wdir/utils"
 	"github.com/valyala/fasthttp"
+	"golang.org/x/sync/errgroup"
 )
 
 //go:embed assets/*
@@ -55,19 +57,48 @@ func main() {
 	}
 	fsH := fasthttp.FSHandler(config.Config.Path, 0)
 	handler := fasthttp.CompressHandler(controller.HandleFastHTTP(fsH, t, &embedF, rootPath, commit))
-	address := utils.GetNetAddress()
+	ipv4Addrs, ipv6Addrs := utils.GetNetIPv4Address(), utils.GetNetIPv6Address()
+	addrs := append(ipv4Addrs, ipv6Addrs...)
 
 	fmt.Println("Version:", version, "Commit:", commit)
-	addr := fmt.Sprintf("0.0.0.0:%s", config.Config.Port)
-	if len(certFile) > 0 && len(keyFile) > 0 {
-		displayAddress(address, true)
-		err = fasthttp.ListenAndServeTLS(addr, certFile, keyFile, handler)
-	} else {
-		displayAddress(address, false)
-		err = fasthttp.ListenAndServe(addr, handler)
+
+	tls := len(certFile) > 0 && len(keyFile) > 0
+	displayAddress(addrs, tls)
+
+	ipv4Addr := fmt.Sprintf(":%v", config.Config.Port)
+	ipv6Addr := fmt.Sprintf("[::]:%v", config.Config.Port)
+
+	srv := &fasthttp.Server{
+		Handler: handler,
 	}
+	v4Ln, err := net.Listen("tcp4", ipv4Addr)
 	if err != nil {
 		utils.Log.Fatal(err)
+	}
+	v6Ln, err := net.Listen("tcp6", ipv6Addr)
+	if err != nil {
+		utils.Log.Fatal(err)
+	}
+	defer v4Ln.Close()
+	defer v6Ln.Close()
+
+	errGroup := new(errgroup.Group)
+	errGroup.Go(func() error {
+		if tls {
+			return srv.ServeTLS(v4Ln, certFile, keyFile)
+		} else {
+			return srv.Serve(v4Ln)
+		}
+	})
+	errGroup.Go(func() error {
+		if tls {
+			return srv.ServeTLS(v6Ln, certFile, keyFile)
+		} else {
+			return srv.Serve(v6Ln)
+		}
+	})
+	if err := errGroup.Wait(); err != nil {
+		utils.Log.Fatalln(err)
 	}
 }
 

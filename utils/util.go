@@ -51,8 +51,29 @@ func PathHidden(path string) bool {
 	return false
 }
 
+func isLocalIPv6(ip net.IP) bool {
+	return ip.IsLinkLocalUnicast() || ip.IsGlobalUnicast()
+}
+
+func GetNetIPv6Address() []string {
+	netS := make([]string, 0)
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		panic(err)
+	}
+
+	for _, addr := range addrs {
+		if ipNet, ok := addr.(*net.IPNet); ok && !ipNet.IP.IsLoopback() {
+			if ipNet.IP.To4() == nil && ipNet.IP.To16() != nil && isLocalIPv6(ipNet.IP) {
+				netS = append(netS, fmt.Sprintf("[%s]", ipNet.IP.String()))
+			}
+		}
+	}
+	return netS
+}
+
 // Get all network interface
-func GetNetAddress() []string {
+func GetNetIPv4Address() []string {
 	netS := make([]string, 0)
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {

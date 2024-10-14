@@ -6,6 +6,7 @@ require (
 	github.com/h2non/filetype v1.1.3
 	github.com/jinzhu/configor v1.2.2
 	github.com/valyala/fasthttp v1.55.0
+	golang.org/x/sync v0.8.0
 )
 
 require (
