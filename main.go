@@ -45,6 +45,19 @@ func init() {
 	utils.InitLogger(config.Config.LogPath)
 }
 
+func RedirectHTTPS(fsH fasthttp.RequestHandler, tls bool) fasthttp.RequestHandler {
+	if !tls {
+		return fsH
+	}
+	return func(ctx *fasthttp.RequestCtx) {
+		if !ctx.IsTLS() {
+			ctx.Redirect("https://"+string(ctx.Host())+string(ctx.RequestURI()), fasthttp.StatusPermanentRedirect)
+			return
+		}
+		fsH(ctx)
+	}
+}
+
 func main() {
 	t, err := template.ParseFS(embedF, "assets/index.html", "assets/header.html")
 	if err != nil {
@@ -55,14 +68,14 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	tls := len(certFile) > 0 && len(keyFile) > 0
 	fsH := fasthttp.FSHandler(config.Config.Path, 0)
-	handler := fasthttp.CompressHandler(controller.HandleFastHTTP(fsH, t, &embedF, rootPath, commit))
+	handler := RedirectHTTPS(fasthttp.CompressHandler(controller.HandleFastHTTP(fsH, t, &embedF, rootPath, commit)), tls)
 	ipv4Addrs, ipv6Addrs := utils.GetNetIPv4Address(), utils.GetNetIPv6Address()
 	addrs := append(ipv4Addrs, ipv6Addrs...)
 
 	fmt.Println("Version:", version, "Commit:", commit)
 
-	tls := len(certFile) > 0 && len(keyFile) > 0
 	displayAddress(addrs, tls)
 
 	ipv4Addr := fmt.Sprintf(":%v", config.Config.Port)
@@ -84,19 +97,19 @@ func main() {
 
 	errGroup := new(errgroup.Group)
 	errGroup.Go(func() error {
-		if tls {
-			return srv.ServeTLS(v4Ln, certFile, keyFile)
-		} else {
-			return srv.Serve(v4Ln)
-		}
+		return srv.Serve(v4Ln)
 	})
 	errGroup.Go(func() error {
-		if tls {
-			return srv.ServeTLS(v6Ln, certFile, keyFile)
-		} else {
-			return srv.Serve(v6Ln)
-		}
+		return srv.Serve(v6Ln)
 	})
+	if tls {
+		errGroup.Go(func() error {
+			return srv.ServeTLS(v4Ln, certFile, keyFile)
+		})
+		errGroup.Go(func() error {
+			return srv.ServeTLS(v6Ln, certFile, keyFile)
+		})
+	}
 	if err := errGroup.Wait(); err != nil {
 		utils.Log.Fatalln(err)
 	}
