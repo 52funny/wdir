@@ -80,14 +80,20 @@ func RenderDir(ctx *fasthttp.RequestCtx, t *template.Template, dirPath, urlPath,
 
 	directoryList := make([]model.File, 0, len(files))
 	fileList := make([]model.File, 0, len(files))
+	basicToken := ctx.UserValue("basicToken")
+	token := ""
+	if basicToken != nil {
+		token += "?token=" + basicToken.(string)
+	}
 
 	for _, item := range files {
 		if !config.Config.ShowHiddenFiles && utils.FileHidden(item.Name()) {
 			continue
 		}
 		fStat, _ := os.Stat(filepath.Join(dirPath, item.Name()))
+		path := filepath.Join(urlPath, item.Name())
 		f := model.File{
-			Path: filepath.Join(urlPath, item.Name()),
+			Path: path,
 			FileInfo: model.FileInfo{
 				Name: item.Name(),
 				Date: fStat.ModTime().Format(time.DateTime),
@@ -99,6 +105,9 @@ func RenderDir(ctx *fasthttp.RequestCtx, t *template.Template, dirPath, urlPath,
 			f.FileInfo.Type = "folder"
 			directoryList = append(directoryList, f)
 		case false:
+			if token != "" {
+				f.Path += token
+			}
 			kind, _ := filetype.MatchFile(filepath.Join(dirPath, item.Name()))
 			f.FileInfo.Type = kind.Extension
 			fileList = append(fileList, f)

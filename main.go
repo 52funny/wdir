@@ -2,15 +2,16 @@ package main
 
 import (
 	"embed"
-	"flag"
 	"fmt"
 	"html/template"
 	"net"
+	"os"
 	"path/filepath"
 
-	"github.com/52funny/wdir/config"
 	"github.com/52funny/wdir/controller"
+	"github.com/52funny/wdir/model"
 	"github.com/52funny/wdir/utils"
+	"github.com/jessevdk/go-flags"
 	"github.com/valyala/fasthttp"
 	"golang.org/x/sync/errgroup"
 )
@@ -27,22 +28,44 @@ var (
 var certFile string
 var keyFile string
 
-func init() {
-	configName := flag.String("c", "config.yaml", "the config name")
-	port := flag.String("p", "80", "server port")
-	flag.StringVar(&certFile, "tls-cert", "", "Path to SSL/TLS certificate")
-	flag.StringVar(&keyFile, "tls-key", "", "Path to SSL/TLS certificate's private key")
-	flag.Parse()
+var username string
+var password string
+
+type Options struct {
+	Config         string   `short:"c" long:"config" description:"the config name" default:"config.yaml" required:"false"`
+	Port           string   `short:"p" long:"port" description:"server port" default:"80" env:"PORT"`
+	TLSCert        string   `long:"tls-cert" description:"Path to SSL/TLS certificate" required:"false"`
+	TLSKey         string   `long:"tls-key" description:"Path to SSL/TLS certificate's private key" required:"false"`
+	Username       []string `long:"user" description:"username for basic auth" required:"false"`
+	Password       []string `long:"pass" description:"password for basic auth" required:"false"`
+	LogPath        string   `long:"log" description:"log path" default:"log" required:"false" env:"LOGPATH"`
+	HiddenDotFiles bool     `long:"show" description:"show hidden files" required:"false" env:"SHOWHIDDENFILES"`
+}
+
+var opts Options
+var parser = flags.NewParser(&opts, flags.Default)
+
+func initFlags() string {
+	args, err := parser.Parse()
+	if err != nil {
+		switch flagsErr := err.(type) {
+		case flags.ErrorType:
+			if flagsErr == flags.ErrHelp {
+				os.Exit(0)
+			}
+			os.Exit(1)
+		default:
+			fmt.Println(flagsErr)
+			os.Exit(1)
+		}
+	}
 
 	path := "."
-	if len(flag.Args()) > 0 {
-		path = flag.Arg(0)
+	if len(args) > 0 {
+		path = args[0]
 	}
-	err := config.ReadConfig(*configName, *port, path)
-	if err != nil {
-		panic(err)
-	}
-	utils.InitLogger(config.Config.LogPath)
+	utils.InitLogger(opts.LogPath)
+	return path
 }
 
 func RedirectHTTPS(fsH fasthttp.RequestHandler, tls bool) fasthttp.RequestHandler {
@@ -59,18 +82,20 @@ func RedirectHTTPS(fsH fasthttp.RequestHandler, tls bool) fasthttp.RequestHandle
 }
 
 func main() {
+	path := initFlags()
 	t, err := template.ParseFS(embedF, "assets/index.html", "assets/header.html")
 	if err != nil {
 		utils.Log.Fatal(err)
 	}
 
-	rootPath, err := filepath.Abs(config.Config.Path)
+	rootPath, err := filepath.Abs(path)
 	if err != nil {
 		panic(err)
 	}
 	tls := len(certFile) > 0 && len(keyFile) > 0
-	fsH := fasthttp.FSHandler(config.Config.Path, 0)
-	handler := RedirectHTTPS(fasthttp.CompressHandler(controller.HandleFastHTTP(fsH, t, &embedF, rootPath, commit)), tls)
+	fsH := fasthttp.FSHandler(path, 0)
+	basic := model.NewBasicAuth(opts.Username, opts.Password)
+	handler := RedirectHTTPS(fasthttp.CompressHandler(controller.BasicAuth(basic, controller.HandleFastHTTP(fsH, t, &embedF, rootPath, commit))), tls)
 	ipv4Addrs, ipv6Addrs := utils.GetNetIPv4Address(), utils.GetNetIPv6Address()
 	addrs := append(ipv4Addrs, ipv6Addrs...)
 
@@ -78,8 +103,9 @@ func main() {
 
 	displayAddress(addrs, tls)
 
-	ipv4Addr := fmt.Sprintf(":%v", config.Config.Port)
-	ipv6Addr := fmt.Sprintf("[::]:%v", config.Config.Port)
+	ipv4Addr := fmt.Sprintf(":%v", opts.Port)
+
+	ipv6Addr := fmt.Sprintf("[::]:%v", opts.Port)
 
 	srv := &fasthttp.Server{
 		Handler: handler,
@@ -121,8 +147,8 @@ func displayAddress(address []string, https bool) {
 		scheme = "https"
 	}
 	fmt.Println("You can now view list in the browser.")
-	fmt.Printf("  Local:%10c  %s://localhost:%v\n", ' ', scheme, config.Config.Port)
+	fmt.Printf("  Local:%10c  %s://localhost:%v\n", ' ', scheme, opts.Port)
 	for _, addr := range address {
-		fmt.Printf("  On Your NetWork:  %s://%v:%v\n", scheme, addr, config.Config.Port)
+		fmt.Printf("  On Your NetWork:  %s://%v:%v\n", scheme, addr, opts.Port)
 	}
 }
