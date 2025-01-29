@@ -52,7 +52,11 @@ func PathHidden(path string) bool {
 }
 
 func isLocalIPv6(ip net.IP) bool {
-	return ip.IsLinkLocalUnicast() || ip.IsGlobalUnicast()
+	// remove link-local and private addresses
+	if ip.IsLinkLocalUnicast() || ip.IsPrivate() {
+		return false
+	}
+	return ip.IsGlobalUnicast()
 }
 
 func GetNetIPv6Address() []string {
